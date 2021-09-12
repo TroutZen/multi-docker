@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t dotway/mutli-docker-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run dotway/multi-docker-test npm test -- --coverage # to force this to exit after tests
+
+after_success:
+  - docker build -t dotway/multi-docker-client ./client
+  - docker build -t dotway/multi-docker-nginx ./nginx
+  - docker build -t dotway/multi-docker-server ./server
+  - docker build -t dotway/multi-docker-worker ./worker
+  # Login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push dotway/multi-docker-nginx
+  - docker push dotway/multi-docker-client
+  - docker push dotway/multi-docker-server
+  - docker push dotway/multi-docker-worker
+  # Take images and push to docker hub
