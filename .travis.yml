@@ -4,7 +4,7 @@ services:
   - docker
 
 before_install:
-  - docker build -t dotway/mutli-docker-test -f ./client/Dockerfile.dev ./client
+  - docker build -t dotway/multi-docker-test -f ./client/Dockerfile.dev ./client
 
 script:
   - docker run dotway/multi-docker-test npm test -- --coverage # to force this to exit after tests
