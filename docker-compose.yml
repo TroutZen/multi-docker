@@ -1,12 +1,6 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: 'postgres:latest'
-    environment:
-      - PG_PASSWORD=postgres_password
-  redis:
-    image: 'redis:latest'
   nginx:
     restart: always # make sure this baby is always running
     image: "dotway/multi-docker-nginx"
