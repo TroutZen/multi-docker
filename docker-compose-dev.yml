@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - PG_PASSWORD=postgres_password
+  redis:
+    image: 'redis:latest'
+  nginx:
+    restart: always # make sure this baby is always running
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - '3050:80' #localhost_port:container_port
+    depends_on:
+      - api
+      - client
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./server
+    volumes:
+      - /app/node_modules # don't try to redirect access to this...
+      - ./server:/app # any files within /app will be taken from ./server (wont need to rebuild img)
+    environment: # alot of these defaults will come from the image repos on docker hub
+      - REDIS_HOST=redis # its just redis bc thats the name of the service above...
+      - REDIS_PORT=6379
+      - PG_USER=postgres
+      - PG_HOST=postgres # bc name of service
+      - PG_DATABASE=postgres
+      - PG_PASSWORD=postgres_password
+      - PG_PORT=5432
+    depends_on: # waits to start api until after redis / postgres started (note might need to specify a more specific command to find out when those services are realllly ready and not just started)
+      - redis
+      - postgres
+  client:
+    stdin_open: true
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./client
+    volumes:
+      - /app/node_modules # do not get overwritten by node modules on client
+      - ./client:/app
+  worker:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./worker
+    volumes:
+      - /app/node_modules # do not get overwritten by node modules on client
+      - ./worker:/app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on: 
+      - redis
+      - postgres

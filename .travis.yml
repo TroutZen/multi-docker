@@ -21,3 +21,15 @@ after_success:
   - docker push dotway/multi-docker-server
   - docker push dotway/multi-docker-worker
   # Take images and push to docker hub
+
+deploy:
+  provider: elasticbeanstalk
+  region: 'us-west-2'
+  app: 'multi-docker'
+  env: 'MultiDocker-env'
+  bucket_name: 'elasticbeanstalk-us-west-2-330154092120'
+  bucket_path: 'multi-docker'
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key: $AWS_SECRET_KEY

@@ -9,50 +9,40 @@ services:
     image: 'redis:latest'
   nginx:
     restart: always # make sure this baby is always running
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./nginx
+    image: "dotway/multi-docker-nginx"
+    mem_limit: 128m
+    hostname: nginx
     ports:
-      - '3050:80' #localhost_port:container_port
+      - "80:80"
     depends_on:
       - api
       - client
   api:
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./server
-    volumes:
-      - /app/node_modules # don't try to redirect access to this...
-      - ./server:/app # any files within /app will be taken from ./server (wont need to rebuild img)
-    environment: # alot of these defaults will come from the image repos on docker hub
-      - REDIS_HOST=redis # its just redis bc thats the name of the service above...
-      - REDIS_PORT=6379
-      - PG_USER=postgres
-      - PG_HOST=postgres # bc name of service
-      - PG_DATABASE=postgres
-      - PG_PASSWORD=postgres_password
-      - PG_PORT=5432
+    image: dotway/multi-docker-server
+    hostname: api
+    mem_limit: 128m
+    environment:
+      - REDIS_HOST=$REDIS_HOST
+      - REDIS_PORT=$REDIS_PORT
+      - PG_USER=$PG_USER
+      - PG_HOST=$PG_HOST
+      - PG_DATABASE=$PG_DATABASE
+      - PG_PASSWORD=$PG_PASSWORD
+      - PG_PORT=$PG_PORT
     depends_on: # waits to start api until after redis / postgres started (note might need to specify a more specific command to find out when those services are realllly ready and not just started)
       - redis
       - postgres
   client:
-    stdin_open: true
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./client
-    volumes:
-      - /app/node_modules # do not get overwritten by node modules on client
-      - ./client:/app
+    image: dotway/multi-docker-client
+    mem_limit: 128m
+    hostname: client
   worker:
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./worker
-    volumes:
-      - /app/node_modules # do not get overwritten by node modules on client
-      - ./worker:/app
+    image: dotway/multi-docker-worker
+    mem_limit: 128m
+    hostname: worker
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_HOST=$REDIS_HOST
+      - REDIS_PORT=$REDIS_PORT
     depends_on: 
       - redis
       - postgres
